@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 
-import LoginOrRegisterForm from "./Register";
+import LoginOrRegisterForm from "./LoginOrRegisterForm";
 import Chat from "./Chat";
 import { UserContext } from "./UserContext";
 
