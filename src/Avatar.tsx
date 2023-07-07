@@ -18,7 +18,6 @@ const Avatar: React.FC<AvatarProps> = ({ id, username }) => {
   const idBase10 = Number.parseInt(id, 16);
   const colorIndex = (idBase10 * 100) % colors.length;
   const color = colors[colorIndex];
-  console.log(colorIndex);
   return (
     <div className={"flex items-center w-8 h-8 rounded-full ".concat(color)}>
       <div className="w-full font-bold text-center opacity-50">
