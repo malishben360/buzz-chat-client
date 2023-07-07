@@ -78,6 +78,7 @@ const Chat: React.FC = () => {
         <Logo />
         {Object.keys(onlinePeopleExcluded).map((id) => (
           <div
+            key={id}
             className={
               "flex gap-1 items-center border-b-2 border-gray-100 cursor-pointer " +
               (selectedUserId === id ? "bg-blue-50" : "")
