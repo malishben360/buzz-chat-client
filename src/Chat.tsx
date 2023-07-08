@@ -25,16 +25,19 @@ const Chat: React.FC = () => {
   const { id } = useContext(UserContext);
 
   useEffect(() => {
+    connectToWebSocket();
+  }, []);
+
+  const connectToWebSocket = () => {
     const webSocket = new WebSocket("ws://localhost:9000");
     setWs(webSocket);
     webSocket.addEventListener("message", messageHandler);
-
-    // Clean up the WebSocket connection on component unmount
-    // return () => {
-    //   webSocket.removeEventListener("message", messageHandler);
-    //   webSocket.close();
-    // };
-  }, []);
+    webSocket.addEventListener("close", () => {
+      setTimeout(() => {
+        connectToWebSocket();
+      }, 1000);
+    });
+  };
 
   useEffect(() => {
     if (divUnderMessages.current) {
@@ -61,6 +64,7 @@ const Chat: React.FC = () => {
     const messageData: Record<string, IPerson[]> | IMessage = JSON.parse(
       ev.data
     );
+
     if ("online" in messageData) {
       showOnlinePeople(messageData.online);
     } else if ("text" in messageData) {
