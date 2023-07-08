@@ -1,6 +1,6 @@
 import React from "react";
 
-const Logo = () => {
+const Logo: React.FC = () => {
   return (
     <div className="flex p-2 pl-4 pt-4 mb-2 text-md font-bold text-blue-700 gap-1">
       <svg

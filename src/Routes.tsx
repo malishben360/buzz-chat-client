@@ -13,12 +13,13 @@ const Routes: React.FC = () => {
         <Chat />
       </div>
     );
+  } else {
+    return (
+      <div>
+        <LoginOrRegisterForm />
+      </div>
+    );
   }
-  return (
-    <div>
-      <LoginOrRegisterForm />
-    </div>
-  );
 };
 
 export default Routes;

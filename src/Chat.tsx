@@ -1,19 +1,17 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 
 import Avatar from "./Avatar";
-import Logo from "./logo";
+import Logo from "./Logo";
 import { UserContext } from "./UserContext";
-interface Person {
+import { uniqBy, times, sample } from "lodash";
+interface IPerson {
   id: string;
   username: string;
 }
-interface Message {
-  text: string;
-  isOur: boolean;
-}
-
-interface IncomingMessage {
+interface IMessage {
+  id: string;
   sender: string;
+  recipient: string;
   text: string;
 }
 
@@ -21,8 +19,9 @@ const Chat: React.FC = () => {
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [onlinePeople, setOnlinePeople] = useState<Record<string, string>>({});
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [messages, setMesages] = useState<Message[]>([]);
+  const [messages, setMesages] = useState<IMessage[]>([]);
   const [newMessageText, setNewMessageText] = useState<string>("");
+  const divUnderMessages = useRef<HTMLDivElement>(null);
   const { id } = useContext(UserContext);
 
   useEffect(() => {
@@ -37,23 +36,35 @@ const Chat: React.FC = () => {
     // };
   }, []);
 
-  const showOnlinePeople = (peopleArray: Person[]): void => {
+  useEffect(() => {
+    if (divUnderMessages.current) {
+      divUnderMessages.current.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+    }
+  }, [messages]);
+
+  const showOnlinePeople = (peopleArray: IPerson[]): void => {
+    // Remove dupplicate records.
     const people: Record<string, string> = {};
     peopleArray.forEach(({ id, username }) => {
       people[id] = username;
     });
+
+    // Set online people.
     setOnlinePeople(people);
   };
 
+  // Handle incoming message envent and the  corresponding data.
   const messageHandler = (ev: MessageEvent): void => {
-    const messageData: Record<string, Person[]> | IncomingMessage = JSON.parse(
+    const messageData: Record<string, IPerson[]> | IMessage = JSON.parse(
       ev.data
     );
     if ("online" in messageData) {
       showOnlinePeople(messageData.online);
-    } else {
-      const message = messageData as IncomingMessage;
-      setMesages((prev) => [...prev, { text: message.text, isOur: true }]);
+    } else if ("text" in messageData) {
+      setMesages((prev) => [...prev, { ...(messageData as IMessage) }]);
     }
   };
 
@@ -61,21 +72,39 @@ const Chat: React.FC = () => {
     ev.preventDefault();
     ws?.send(
       JSON.stringify({
+        sender: id,
         recipient: selectedUserId,
         text: newMessageText,
       })
     );
+
+    // Reset form.
     setNewMessageText("");
-    setMesages((prev) => [...prev, { text: newMessageText, isOur: true }]);
+
+    // Generate random id for the message.
+    const messageId = times(25, () => sample("0123456789abcdef")).join("");
+    setMesages((prev) => [
+      ...prev,
+      {
+        id: messageId,
+        sender: id,
+        recipient: selectedUserId,
+        text: newMessageText,
+      } as IMessage,
+    ]);
   };
 
-  // Exclude the current user from the contact list.
+  //  Remove current user from the contact list.
   const onlinePeopleExcluded = { ...onlinePeople };
   delete onlinePeopleExcluded[id as string];
+
+  // Remove dupplicate messages.
+  const messagesWithoutDups = uniqBy(messages, "id");
   return (
     <div className="flex h-screen">
       <div className="w-1/3 bg-white">
         <Logo />
+        {/* Contact section */}
         {Object.keys(onlinePeopleExcluded).map((id) => (
           <div
             key={id}
@@ -97,24 +126,52 @@ const Chat: React.FC = () => {
             </div>
           </div>
         ))}
+        {/* End of contact section */}
       </div>
+      {/* Chat section */}
       <div className="flex p-2 flex-col w-2/3 bg-blue-100">
         <div className="flex-grow">
+          {/* Empty messages section */}
           {!selectedUserId && (
-            <div className="h-full flex justify-center items-center">
+            <div className="flex h-full flex-grow justify-center items-center">
               <div className="text-gray-300">
                 &larr; Select a person from the sidebar
               </div>
             </div>
           )}
+          {/* End of empty messages section */}
+          {/* Messages section */}
           {!!messages && (
-            <div>
-              {messages.map((message) => (
-                <div>{message.text}</div>
-              ))}
+            <div className={"relative " + (!!selectedUserId && "h-full")}>
+              <div className="overflow-y-scroll absolute inset-0">
+                {messagesWithoutDups.map((message) => (
+                  <div
+                    className={
+                      message.sender === id ? "text-right" : "text-left"
+                    }
+                  >
+                    <div
+                      className={
+                        "inline-block p-2 my-2 text-sm text-left rounded-md" +
+                        " " +
+                        (message.sender === id
+                          ? "bg-white text-gray-600"
+                          : "bg-blue-500 text-white")
+                      }
+                    >
+                      <div>Sender: {message.sender}</div>
+                      <div>My id: {id}</div>
+                      <div>{message.text}</div>
+                    </div>
+                  </div>
+                ))}
+                <div ref={divUnderMessages}></div>
+              </div>
             </div>
           )}
+          {/* End of messages section */}
         </div>
+        {/* Chat form */}
         {!!selectedUserId && (
           <form className="flex gap-2" onSubmit={sendMessage}>
             <input
@@ -147,7 +204,9 @@ const Chat: React.FC = () => {
             </button>
           </form>
         )}
+        {/* End of chat form */}
       </div>
+      {/* End of chat section */}
     </div>
   );
 };
