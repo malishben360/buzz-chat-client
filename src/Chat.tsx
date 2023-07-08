@@ -25,19 +25,8 @@ const Chat: React.FC = () => {
   const { id } = useContext(UserContext);
 
   useEffect(() => {
-    connectToWebSocket();
+    connectToWebSocket(receiveMessage);
   }, []);
-
-  const connectToWebSocket = () => {
-    const webSocket = new WebSocket("ws://localhost:9000");
-    setWs(webSocket);
-    webSocket.addEventListener("message", messageHandler);
-    webSocket.addEventListener("close", () => {
-      setTimeout(() => {
-        connectToWebSocket();
-      }, 1000);
-    });
-  };
 
   useEffect(() => {
     if (divUnderMessages.current) {
@@ -47,6 +36,17 @@ const Chat: React.FC = () => {
       });
     }
   }, [messages]);
+
+  const connectToWebSocket = (receiveMessage: (ev: MessageEvent) => void) => {
+    const webSocket = new WebSocket("ws://localhost:9000");
+    setWs(webSocket);
+    webSocket.addEventListener("message", receiveMessage);
+    webSocket.addEventListener("close", () => {
+      setTimeout(() => {
+        connectToWebSocket(receiveMessage);
+      }, 1000);
+    });
+  };
 
   const showOnlinePeople = (peopleArray: IPerson[]): void => {
     // Remove dupplicate records.
@@ -60,7 +60,7 @@ const Chat: React.FC = () => {
   };
 
   // Handle incoming message envent and the  corresponding data.
-  const messageHandler = (ev: MessageEvent): void => {
+  const receiveMessage = (ev: MessageEvent): void => {
     const messageData: Record<string, IPerson[]> | IMessage = JSON.parse(
       ev.data
     );
