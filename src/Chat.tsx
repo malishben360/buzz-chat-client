@@ -4,6 +4,7 @@ import Avatar from "./Avatar";
 import Logo from "./Logo";
 import { UserContext } from "./UserContext";
 import { uniqBy, times, sample } from "lodash";
+import axios, { type AxiosResponse, type AxiosError } from "axios";
 interface IPerson {
   id: string;
   username: string;
@@ -27,6 +28,20 @@ const Chat: React.FC = () => {
   useEffect(() => {
     connectToWebSocket(receiveMessage);
   }, []);
+
+  useEffect(() => {
+    // Don't send request when selected user id is null.
+    if (selectedUserId !== null) {
+      axios("/messages/" + selectedUserId)
+        .then((res: AxiosResponse) => {
+          const data = res.data;
+          setMesages(() => data);
+        })
+        .catch((err: AxiosError) => {
+          console.log("Error: ", err);
+        });
+    }
+  }, [selectedUserId]);
 
   useEffect(() => {
     if (divUnderMessages.current) {
@@ -98,6 +113,10 @@ const Chat: React.FC = () => {
     ]);
   };
 
+  const selectUserId = (id: string): void => {
+    setSelectedUserId(() => id);
+  };
+
   //  Remove current user from the contact list.
   const onlinePeopleExcluded = { ...onlinePeople };
   delete onlinePeopleExcluded[id as string];
@@ -116,7 +135,7 @@ const Chat: React.FC = () => {
               "flex gap-1 items-center border-b-2 border-gray-100 cursor-pointer " +
               (selectedUserId === id ? "bg-blue-50" : "")
             }
-            onClick={() => setSelectedUserId(id)}
+            onClick={() => selectUserId(id)}
           >
             <div
               className={
