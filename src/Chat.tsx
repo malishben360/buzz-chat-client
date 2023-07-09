@@ -5,7 +5,7 @@ import Logo from "./Logo";
 import { UserContext } from "./UserContext";
 import { uniqBy, times, sample } from "lodash";
 import axios, { type AxiosResponse, type AxiosError } from "axios";
-interface IPerson {
+interface IUser {
   id: string;
   username: string;
 }
@@ -18,7 +18,8 @@ interface IMessage {
 
 const Chat: React.FC = () => {
   const [ws, setWs] = useState<WebSocket | null>(null);
-  const [onlinePeople, setOnlinePeople] = useState<Record<string, string>>({});
+  const [onlineUsers, setOnlineUsers] = useState<Record<string, string>>({});
+  const [offlineUsers, setOfflineUsers] = useState<Record<string, string>>({});
   const [selectedUserId, setSelectedUserId] = useState<string | null>(
     localStorage.getItem("selectedUserId") || null
   );
@@ -54,6 +55,27 @@ const Chat: React.FC = () => {
     }
   }, [messages]);
 
+  useEffect(() => {
+    axios
+      .get("/users")
+      .then((res: AxiosResponse) => {
+        // Filter out online users.
+        const usersArray = res.data.filter(
+          (user: IUser) => !Object.keys(onlineUsers).includes(user.id)
+        );
+
+        const users: Record<string, string> = {};
+        usersArray.forEach((user: IUser) => {
+          users[user.id] = user.username;
+        });
+
+        setOfflineUsers(users);
+      })
+      .catch((err) => {
+        console.log("Fetch users failed", err);
+      });
+  }, [onlineUsers, id]);
+
   const connectToWebSocket = (receiveMessage: (ev: MessageEvent) => void) => {
     const webSocket = new WebSocket("ws://localhost:9000");
     setWs(webSocket);
@@ -65,25 +87,23 @@ const Chat: React.FC = () => {
     });
   };
 
-  const showOnlinePeople = (peopleArray: IPerson[]): void => {
+  const showonlineUsers = (usersArray: IUser[]): void => {
     // Remove dupplicate records.
-    const people: Record<string, string> = {};
-    peopleArray.forEach(({ id, username }) => {
-      people[id] = username;
+    const users: Record<string, string> = {};
+    usersArray.forEach(({ id, username }) => {
+      users[id] = username;
     });
 
-    // Set online people.
-    setOnlinePeople(people);
+    // Set online users.
+    setOnlineUsers(users);
   };
 
   // Handle incoming message envent and the  corresponding data.
   const receiveMessage = (ev: MessageEvent): void => {
-    const messageData: Record<string, IPerson[]> | IMessage = JSON.parse(
-      ev.data
-    );
+    const messageData: Record<string, IUser[]> | IMessage = JSON.parse(ev.data);
 
     if ("online" in messageData) {
-      showOnlinePeople(messageData.online);
+      showonlineUsers(messageData.online);
     } else if ("text" in messageData) {
       setMesages((prev) => [...prev, { ...(messageData as IMessage) }]);
     }
@@ -121,8 +141,8 @@ const Chat: React.FC = () => {
   };
 
   //  Remove current user from the contact list.
-  const onlinePeopleExcluded = { ...onlinePeople };
-  delete onlinePeopleExcluded[id as string];
+  const onlineUsersExcluded = { ...onlineUsers };
+  delete onlineUsersExcluded[id as string];
 
   // Remove dupplicate messages.
   const messagesWithoutDups = uniqBy(messages, "id");
@@ -131,7 +151,7 @@ const Chat: React.FC = () => {
       <div className="w-1/3 bg-white">
         <Logo />
         {/* Contact section */}
-        {Object.keys(onlinePeopleExcluded).map((id) => (
+        {Object.keys(onlineUsersExcluded).map((id) => (
           <div
             key={id}
             className={
@@ -147,8 +167,29 @@ const Chat: React.FC = () => {
               }
             ></div>
             <div className="flex py-2 pl-4 gap-1 items-center">
-              <Avatar id={id} username={onlinePeople[id]} />
-              <span className="text-gray-700">{onlinePeople[id]}</span>
+              <Avatar id={id} username={onlineUsers[id]} online={true} />
+              <span className="text-gray-700">{onlineUsers[id]}</span>
+            </div>
+          </div>
+        ))}
+        {Object.keys(offlineUsers).map((id) => (
+          <div
+            key={id}
+            className={
+              "flex gap-1 items-center border-b-2 border-gray-100 cursor-pointer " +
+              (selectedUserId === id ? "bg-blue-50" : "")
+            }
+            onClick={() => selectUserId(id)}
+          >
+            <div
+              className={
+                "w-1 h-12 rounded-tr-full " +
+                (id === selectedUserId ? "bg-blue-500" : "")
+              }
+            ></div>
+            <div className="flex py-2 pl-4 gap-1 items-center">
+              <Avatar id={id} username={offlineUsers[id]} online={false} />
+              <span className="text-gray-700">{offlineUsers[id]}</span>
             </div>
           </div>
         ))}

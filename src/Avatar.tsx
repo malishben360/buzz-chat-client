@@ -3,9 +3,10 @@ import React from "react";
 interface AvatarProps {
   id: string;
   username: string;
+  online: boolean;
 }
 
-const Avatar: React.FC<AvatarProps> = ({ id, username }) => {
+const Avatar: React.FC<AvatarProps> = ({ id, username, online }) => {
   const colors = [
     "bg-blue-200",
     "bg-red-200",
@@ -19,10 +20,17 @@ const Avatar: React.FC<AvatarProps> = ({ id, username }) => {
   const colorIndex = (idBase10 * 100) % colors.length;
   const color = colors[colorIndex];
   return (
-    <div className={"flex items-center w-8 h-8 rounded-full ".concat(color)}>
+    <div
+      className={"relative flex items-center w-8 h-8 rounded-full ".concat(
+        color
+      )}
+    >
       <div className="w-full font-bold text-center opacity-50">
         {username[0].toLocaleUpperCase()}
       </div>
+      {online && (
+        <div className="absolute w-2 h-2 bg-green-500 rounded-full bottom-0 right-0"></div>
+      )}
     </div>
   );
 };
