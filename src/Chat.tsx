@@ -2,11 +2,11 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 
 import Logo from "./Logo";
 import ChatForm from "./ChatForm";
-import ContactDisplay from "./ContactDisplay";
+import Message from "./Message";
+import Contact from "./Contact";
 import { UserContext } from "./UserContext";
 import { uniqBy, times, sample } from "lodash";
 import axios, { type AxiosResponse, type AxiosError } from "axios";
-import MessageBlock from "./MessageBlock";
 interface IUser {
   id: string;
   username: string;
@@ -154,18 +154,26 @@ const Chat: React.FC = () => {
       <div className="w-1/3 bg-white">
         <Logo />
         {/* Contact section */}
-        <ContactDisplay
-          users={onlineUsersExcluded}
-          selectedUserId={selectedUserId}
-          online={true}
-          selectUserId={selectUserId}
-        />
-        <ContactDisplay
-          users={offlineUsers}
-          selectedUserId={selectedUserId}
-          online={false}
-          selectUserId={selectUserId}
-        />
+        {Object.keys(onlineUsersExcluded).map((userId) => (
+          <Contact
+            key={userId}
+            id={userId}
+            username={onlineUsersExcluded[userId]}
+            selectedId={selectedUserId}
+            online={true}
+            onClick={selectUserId}
+          />
+        ))}
+        {Object.keys(offlineUsers).map((userId) => (
+          <Contact
+            key={userId}
+            id={userId}
+            username={offlineUsers[userId]}
+            selectedId={selectedUserId}
+            online={false}
+            onClick={selectUserId}
+          />
+        ))}
         {/* End of contact section */}
       </div>
       {/* Chat section */}
@@ -184,7 +192,9 @@ const Chat: React.FC = () => {
           {!!messages && (
             <div className={"relative " + (!!selectedUserId && "h-full")}>
               <div className="overflow-y-scroll absolute inset-0">
-                <MessageBlock userId={id} messages={messagesWithoutDups} />
+                {messagesWithoutDups.map((message) => (
+                  <Message key={message.id} id={id} message={message} />
+                ))}
                 <div ref={divUnderMessages}></div>
               </div>
             </div>
