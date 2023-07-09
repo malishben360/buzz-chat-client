@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 
-import Avatar from "./Avatar";
 import Logo from "./Logo";
+import ContactDisplay from "./ContactDisplay";
 import { UserContext } from "./UserContext";
 import { uniqBy, times, sample } from "lodash";
 import axios, { type AxiosResponse, type AxiosError } from "axios";
@@ -151,48 +151,18 @@ const Chat: React.FC = () => {
       <div className="w-1/3 bg-white">
         <Logo />
         {/* Contact section */}
-        {Object.keys(onlineUsersExcluded).map((id) => (
-          <div
-            key={id}
-            className={
-              "flex gap-1 items-center border-b-2 border-gray-100 cursor-pointer " +
-              (selectedUserId === id ? "bg-blue-50" : "")
-            }
-            onClick={() => selectUserId(id)}
-          >
-            <div
-              className={
-                "w-1 h-12 rounded-tr-full " +
-                (id === selectedUserId ? "bg-blue-500" : "")
-              }
-            ></div>
-            <div className="flex py-2 pl-4 gap-1 items-center">
-              <Avatar id={id} username={onlineUsers[id]} online={true} />
-              <span className="text-gray-700">{onlineUsers[id]}</span>
-            </div>
-          </div>
-        ))}
-        {Object.keys(offlineUsers).map((id) => (
-          <div
-            key={id}
-            className={
-              "flex gap-1 items-center border-b-2 border-gray-100 cursor-pointer " +
-              (selectedUserId === id ? "bg-blue-50" : "")
-            }
-            onClick={() => selectUserId(id)}
-          >
-            <div
-              className={
-                "w-1 h-12 rounded-tr-full " +
-                (id === selectedUserId ? "bg-blue-500" : "")
-              }
-            ></div>
-            <div className="flex py-2 pl-4 gap-1 items-center">
-              <Avatar id={id} username={offlineUsers[id]} online={false} />
-              <span className="text-gray-700">{offlineUsers[id]}</span>
-            </div>
-          </div>
-        ))}
+        <ContactDisplay
+          users={onlineUsersExcluded}
+          selectedUserId={selectedUserId}
+          online={true}
+          selectUserId={selectUserId}
+        />
+        <ContactDisplay
+          users={offlineUsers}
+          selectedUserId={selectedUserId}
+          online={false}
+          selectUserId={selectUserId}
+        />
         {/* End of contact section */}
       </div>
       {/* Chat section */}
