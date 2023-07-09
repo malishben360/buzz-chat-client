@@ -19,7 +19,9 @@ interface IMessage {
 const Chat: React.FC = () => {
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [onlinePeople, setOnlinePeople] = useState<Record<string, string>>({});
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(
+    localStorage.getItem("selectedUserId") || null
+  );
   const [messages, setMesages] = useState<IMessage[]>([]);
   const [newMessageText, setNewMessageText] = useState<string>("");
   const divUnderMessages = useRef<HTMLDivElement>(null);
@@ -115,6 +117,7 @@ const Chat: React.FC = () => {
 
   const selectUserId = (id: string): void => {
     setSelectedUserId(() => id);
+    localStorage.setItem("selectedUserId", id);
   };
 
   //  Remove current user from the contact list.
