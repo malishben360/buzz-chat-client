@@ -6,6 +6,7 @@ import ContactDisplay from "./ContactDisplay";
 import { UserContext } from "./UserContext";
 import { uniqBy, times, sample } from "lodash";
 import axios, { type AxiosResponse, type AxiosError } from "axios";
+import MessageBlock from "./MessageBlock";
 interface IUser {
   id: string;
   username: string;
@@ -147,6 +148,7 @@ const Chat: React.FC = () => {
 
   // Remove dupplicate messages.
   const messagesWithoutDups = uniqBy(messages, "id");
+
   return (
     <div className="flex h-screen">
       <div className="w-1/3 bg-white">
@@ -182,28 +184,7 @@ const Chat: React.FC = () => {
           {!!messages && (
             <div className={"relative " + (!!selectedUserId && "h-full")}>
               <div className="overflow-y-scroll absolute inset-0">
-                {messagesWithoutDups.map((message) => (
-                  <div
-                    key={message.id}
-                    className={
-                      message.sender === id ? "text-right" : "text-left"
-                    }
-                  >
-                    <div
-                      className={
-                        "inline-block p-2 my-2 text-sm text-left rounded-md" +
-                        " " +
-                        (message.sender === id
-                          ? "bg-white text-gray-600"
-                          : "bg-blue-500 text-white")
-                      }
-                    >
-                      <div>Sender: {message.sender}</div>
-                      <div>My id: {id}</div>
-                      <div>{message.text}</div>
-                    </div>
-                  </div>
-                ))}
+                <MessageBlock userId={id} messages={messagesWithoutDups} />
                 <div ref={divUnderMessages}></div>
               </div>
             </div>
