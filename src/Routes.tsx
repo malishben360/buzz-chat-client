@@ -5,7 +5,7 @@ import Chat from "./Chat";
 import { UserContext } from "./UserContext";
 
 const Routes: React.FC = () => {
-  const { id, username } = useContext(UserContext);
+  const { username } = useContext(UserContext);
 
   if (username) {
     return (
